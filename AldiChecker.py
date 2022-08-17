@@ -1,6 +1,5 @@
 from urllib.error import HTTPError
 import requests
-import logging
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
@@ -17,10 +16,14 @@ class AldiChecker:
         self.logger = self.config.logger
 
     def getPrice(self, url):
-        self.logger.warning("Checking url")
+        self.logger.info(f"Checking url {url}")
         svc = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=svc)
-        driver.maximize_window()
+        options = webdriver.ChromeOptions()
+        options.add_argument('--disable-notifications')
+        options.add_argument("start-maximized")
+
+        driver = webdriver.Chrome(service=svc, options=options)
+        
         driver.get(url)
         try:
             element = WebDriverWait(driver, 10).until(
@@ -47,13 +50,13 @@ class AldiChecker:
             response = requests.post(send_text, files=photo_file,)
             response.raise_for_status()
         except HTTPError as http_err:
-            print(f'HTTP error occurred: {http_err}')
+            self.logger.error(f'HTTP error occurred: {http_err}')
         else:
-            print('Alert sent.')
+            self.logger.info('Alert sent to telegram chat.')
 
     def main(self):
-        name, price  = self.getPrice(self.config.url)
-        price = self.getNum(price)
+        name, str_price  = self.getPrice(self.config.url)
+        price = self.getNum(str_price)
         base_price = self.getNum(self.config.basePrice)
 
         if (isinstance(price, int) or isinstance(price, float)):
@@ -64,21 +67,25 @@ class AldiChecker:
             elif price > base_price:
                 msg = f"INFLATION ALERT:\nProduct Name: {name}.\nThe price just went up.\nBase price: {base_price}\nCurrent price: {price}"
         else:
-            msg = price
+            msg = f"Product Name: {name}.\n {price}"
 
         try:
             self.send_alert(msg)
         except Exception as e:
-            print(f"Failed to send notification. Erro={e}")
+            self.logger.error(f"Failed to send notification. Erro={e}")
     
     @staticmethod
     def getNum(n: str):
+        if "£" in n:
+            n = n.replace("£", "")
+
         if n.isdigit():
             number = int(n)
-        elif n.isdecimal():
-            number = float(n)
         else:
-            number = n
+            try:
+                number = float(n)
+            except ValueError:
+                number = n
         return number
 
 if __name__ == "__main__":

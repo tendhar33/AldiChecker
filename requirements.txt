@@ -2,3 +2,4 @@ webdriver-manager
 selenium
 beautifulsoup4
 requests
+pathlib

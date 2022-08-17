@@ -1,5 +1,8 @@
+import pathlib
 import logging
+from datetime import datetime
 from configparser import ConfigParser
+
 class AldiCheckerConfig:
     __DEFAULT_CONFIG = "Config/Config.ini"
 
@@ -35,21 +38,21 @@ class AldiCheckerConfig:
 
     @property
     def logger(self):
-        #logging.basicConfig(filename='Logs/AldiChecker.log', filemode='w', )
+        pathlib.Path("Logs").mkdir(parents=True, exist_ok=True)
+        date = datetime.utcnow().strftime("%d-%b-%Y")
+        
         logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
 
-        c_handler = logging.StreamHandler()
-        f_handler = logging.FileHandler("Checker.log")
-        c_handler.setFormatter(logging.WARNING)
-        f_handler.setLevel(logging.ERROR)
+        stream_handler = logging.StreamHandler()
+        stream_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+        stream_handler.setFormatter(stream_format)
 
-        c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-        f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler = logging.FileHandler(f"Logs/Checker_{date}.log")
+        file_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(file_format)
 
-        c_handler.setFormatter(c_format)
-        f_handler.setFormatter(f_format)
-
-        logger.addHandler(c_handler)
-        logger.addHandler(f_handler)
+        logger.addHandler(stream_handler)
+        logger.addHandler(file_handler)
 
         return logger
