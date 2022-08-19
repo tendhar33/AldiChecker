@@ -13,7 +13,7 @@ class AldiCheckerConfig:
         else:
             self.config = config
 
-        self._configparser = ConfigParser()
+        self._configparser = ConfigParser(interpolation=None)
         self._configparser.read(self.config)
 
     @property

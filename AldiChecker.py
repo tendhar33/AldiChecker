@@ -59,7 +59,7 @@ class AldiChecker:
         price = self.getNum(str_price)
         base_price = self.getNum(self.config.basePrice)
 
-        if (isinstance(price, int) or isinstance(price, float)):
+        if isinstance(price, (int, float)):
             if price == base_price:
                 msg = f"NO CHANGE:\nProduct Name: {name}.\nThe current price is same as base price of {base_price}"
             elif price < base_price:
